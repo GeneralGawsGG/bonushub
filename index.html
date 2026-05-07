@@ -2,50 +2,266 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Wallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Solos AI Wallet</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tonweb/0.0.66/tonweb.bundle.js"></script>
+    
     <style>
-        body { font-family: sans-serif; background-color: #000; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        #ton-connect-button { margin-bottom: 20px; }
-        .user-info { background: #1c1c1e; padding: 15px; border-radius: 12px; border: 1px solid #333; text-align: center; width: 80%; }
-        .name { font-size: 18px; font-weight: bold; color: #007AFF; }
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
+            --accent-color: #007aff;
+            --text-main: #ffffff;
+            --text-secondary: #8e8e93;
+        }
+
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wallet-card {
+            background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
+            margin: 0 20px;
+            padding: 25px;
+            border-radius: 24px;
+            border: 1px solid #3a3a3c;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .balance-label { color: var(--text-secondary); font-size: 14px; margin-bottom: 8px; }
+        .balance-value { font-size: 38px; font-weight: 800; margin-bottom: 20px; letter-spacing: -1px; }
+        .balance-value span { font-size: 20px; color: var(--accent-color); margin-left: 5px; }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 25px 20px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border: 1px solid #3a3a3c;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .action-btn:active { transform: scale(0.95); background: #2c2c2e; }
+        .action-icon { font-size: 24px; }
+        .action-text { font-size: 12px; font-weight: 500; }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #2c2c2e;
+            margin-top: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .content-section { padding: 20px; }
+
+        .list-item {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-tag {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 122, 255, 0.2);
+            color: var(--accent-color);
+        }
+
+        #ton-connect-button {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        /* Анимация загрузки */
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="user-info">
-        <p>Привет, <span id="user-name" class="name">Аноним</span>!</p>
+    <div class="header">
+        <div id="user-greeting" style="font-weight: 600;">Wallet</div>
         <div id="ton-connect-button"></div>
-        <p id="wallet-address" style="font-size: 12px; color: #888; word-break: break-all;"></p>
+    </div>
+
+    <div class="wallet-card">
+        <div class="balance-label">Общий баланс</div>
+        <div class="balance-value" id="balance">0.00 <span>TON</span></div>
+        <div id="wallet-addr" style="font-size: 11px; color: var(--text-secondary); word-break: break-all; opacity: 0.7;">Кошелек не подключен</div>
+    </div>
+
+    <div class="actions">
+        <div class="action-btn" onclick="app.send()">
+            <span class="action-icon">🚀</span>
+            <span class="action-text">Отправить</span>
+        </div>
+        <div class="action-btn" onclick="app.receive()">
+            <span class="action-icon">📥</span>
+            <span class="action-text">Получить</span>
+        </div>
+        <div class="action-btn" onclick="app.swap()">
+            <span class="action-icon">🔄</span>
+            <span class="action-text">Обмен</span>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active">Активы</div>
+        <div class="tab">История</div>
+    </div>
+
+    <div class="content-section">
+        <div id="assets-list">
+            <div class="list-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: #007aff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">T</div>
+                    <div>
+                        <div style="font-weight: 600;">Toncoin</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">TON</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div id="asset-amount" style="font-weight: 600;">0.00</div>
+                    <div style="font-size: 12px; color: #34c759;">+2.4%</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
+        tg.expand();
 
-        // 1. Показываем имя из Телеграма
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('user-name').innerText = user.first_name;
-        }
-
-        // 2. Настраиваем кнопку подключения кошелька (TON Connect)
+        // Инициализация TON Connect
         const tonConnectUI = new TONConnectUI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/uniloc/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
-        // 3. Следим за статусом подключения
-        tonConnectUI.onStatusChange(wallet => {
-            if (wallet) {
-                document.getElementById('wallet-address').innerText = `Подключено: ${wallet.account.address}`;
-                console.log('Кошелек подключен:', wallet);
-            } else {
-                document.getElementById('wallet-address').innerText = 'Кошелек не подключен';
+        const tonweb = new TonWeb();
+
+        const app = {
+            address: null,
+
+            init() {
+                const user = tg.initDataUnsafe?.user;
+                if (user) {
+                    document.getElementById('user-greeting').innerText = `@${user.username || user.first_name}`;
+                }
+
+                tonConnectUI.onStatusChange(wallet => {
+                    if (wallet) {
+                        this.address = wallet.account.address;
+                        this.updateUI(true);
+                        this.fetchBalance();
+                    } else {
+                        this.address = null;
+                        this.updateUI(false);
+                    }
+                });
+            },
+
+            updateUI(isConnected) {
+                const addrEl = document.getElementById('wallet-addr');
+                if (isConnected) {
+                    const shortAddr = this.address.substring(0, 6) + '...' + this.address.substring(this.address.length - 4);
+                    addrEl.innerText = shortAddr;
+                } else {
+                    addrEl.innerText = 'Кошелек не подключен';
+                    document.getElementById('balance').innerHTML = '0.00 <span>TON</span>';
+                }
+            },
+
+            async fetchBalance() {
+                if (!this.address) return;
+                try {
+                    const balance = await tonweb.getBalance(this.address);
+                    const formatted = (balance / 1000000000).toFixed(2);
+                    document.getElementById('balance').innerHTML = `${formatted} <span>TON</span>`;
+                    document.getElementById('asset-amount').innerText = formatted;
+                } catch (e) {
+                    console.error("Ошибка баланса", e);
+                }
+            },
+
+            send() {
+                if (!this.address) return tg.showAlert("Сначала подключи кошелек!");
+                tg.showPopup({
+                    title: 'Отправка',
+                    message: 'Введите адрес получателя и сумму',
+                    buttons: [{text: 'OK', type: 'ok'}]
+                });
+            },
+
+            receive() {
+                if (!this.address) return tg.showAlert("Кошелек не подключен");
+                tg.showPopup({
+                    title: 'Ваш адрес',
+                    message: this.address,
+                    buttons: [{text: 'Копировать', type: 'default'}]
+                });
+            },
+
+            swap() {
+                tg.showScanQrPopup({ text: 'Сканируй адрес для обмена' });
             }
-        });
+        };
+
+        app.init();
     </script>
 </body>
 </html>
