@@ -1,38 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Бонусная Карта</title>
+    <title>Bonus App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; }
-        .card { 
-            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-            border-radius: 15px; padding: 20px; margin: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        .balance { font-size: 2em; font-weight: bold; }
+        :root { --main-bg: #0f0f12; --card-bg: #1c1c24; --accent: #7b61ff; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding-bottom: 70px; overflow-x: hidden; }
+        
+        .header { padding: 20px; text-align: center; }
+        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin: 15px; border: 1px solid #333; }
+        .balance-card { background: linear-gradient(135deg, #7b61ff, #00d4ff); position: relative; overflow: hidden; }
+        
+        .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s; }
+        .active { display: block; }
+
+        .shop-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #252530; border-radius: 12px; }
+        .buy-btn { background: var(--accent); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; }
+        .nav-item { color: #888; cursor: pointer; font-size: 14px; }
+        .nav-item.active-nav { color: var(--accent); font-weight: bold; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Виртуальная карта</h2>
-        <div id="user_name">Загрузка...</div>
-        <div class="balance">500 БОНУСОВ</div>
-        <p id="user_id"></p>
-    </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<div id="main" class="tab-content active">
+    <div class="header"><h2>Главная</h2></div>
+    <div class="card balance-card">
+        <p style="margin:0; opacity: 0.8;">Доступные бонусы</p>
+        <h1 id="user-balance">1,500 💎</h1>
+        <small id="user-name">Загрузка...</small>
+    </div>
+    <div class="card">
+        <h3>Твой статус: <span style="color:var(--accent)">VIP</span></h3>
+        <p>До следующего уровня 500 баллов</p>
+    </div>
+</div>
+
+<div id="shop" class="tab-content">
+    <div class="header"><h2>Магазин</h2></div>
+    <div class="card">
+        <div class="shop-item">
+            <span>Стикерпак "Неон"</span>
+            <button class="buy-btn" onclick="buy('stickers')">50 💎</button>
+        </div>
+        <div class="shop-item">
+            <span>Скидка 10% в боте</span>
+            <button class="buy-btn" onclick="buy('discount_10')">200 💎</button>
+        </div>
+    </div>
+</div>
+
+<div id="profile" class="tab-content">
+    <div class="header"><h2>Профиль</h2></div>
+    <div class="card" style="text-align: center;">
+        <div id="pfp" style="width:80px; height:80px; background:var(--accent); border-radius:50%; margin: 0 auto 15px;"></div>
+        <h3 id="p-name">Username</h3>
+        <p id="p-id" style="color:#888"></p>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <div class="nav-item active-nav" onclick="openTab(event, 'main')">Главная</div>
+    <div class="nav-item" onclick="openTab(event, 'shop')">Магазин</div>
+    <div class="nav-item" onclick="openTab(event, 'profile')">Профиль</div>
+</nav>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    const user = tg.initDataUnsafe.user;
+    if (user) {
+        document.getElementById('user-name').innerText = user.first_name;
+        document.getElementById('p-name').innerText = user.first_name;
+        document.getElementById('p-id').innerText = "ID: " + user.id;
+    }
+
+    function openTab(evt, tabName) {
+        let content = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < content.length; i++) content[i].classList.remove("active");
         
-        // Показываем данные пользователя из Telegram
-        const user = tg.initDataUnsafe.user;
-        if (user) {
-            document.getElementById('user_name').innerText = user.first_name;
-            document.getElementById('user_id').innerText = "ID: " + user.id;
-        }
-    </script>
+        let navs = document.getElementsByClassName("nav-item");
+        for (let i = 0; i < navs.length; i++) navs[i].classList.remove("active-nav");
+
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active-nav");
+    }
+
+    function buy(item) {
+        // Отправляем данные в бот и закрываем окно
+        tg.sendData("buy:" + item);
+    }
+</script>
 </body>
 </html>
