@@ -2,79 +2,216 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bonus App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Progress Robot UI</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-bg: #0f0f12; --card-bg: #1c1c24; --accent: #7b61ff; --text: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding-bottom: 70px; overflow-x: hidden; }
-        
-        .header { padding: 20px; text-align: center; }
-        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin: 15px; border: 1px solid #333; }
-        .balance-card { background: linear-gradient(135deg, #7b61ff, #00d4ff); position: relative; overflow: hidden; }
-        
-        .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s; }
-        .active { display: block; }
+        :root {
+            --bg-color: #05070a;
+            --card-bg: rgba(28, 30, 39, 0.6);
+            --accent-blue: #246bfd;
+            --accent-purple: #7b61ff;
+            --text-main: #ffffff;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+        }
 
-        .shop-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #252530; border-radius: 12px; }
-        .buy-btn { background: var(--accent); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #1a1c2e, transparent);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; }
-        .nav-item { color: #888; cursor: pointer; font-size: 14px; }
-        .nav-item.active-nav { color: var(--accent); font-weight: bold; }
+        .container { padding: 16px; padding-bottom: 100px; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 35px; height: 35px; background: var(--accent-purple); border-radius: 50%; }
+
+        /* MAIN CARD (Balance) */
+        .balance-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        .balance-card span { color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-card h1 { font-size: 42px; margin: 10px 0; font-weight: 700; }
+
+        /* BUTTONS */
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .btn-secondary {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* STATS GRID */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-item { background: var(--card-bg); padding: 12px; border-radius: 16px; text-align: center; }
+        .stat-item small { color: var(--text-secondary); font-size: 11px; }
+        .stat-item div { font-weight: bold; margin-top: 4px; }
+
+        /* TRANSACTION LIST */
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+        .transaction {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .t-icon { width: 40px; height: 40px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success); }
+        .t-info div { font-weight: 600; font-size: 15px; }
+        .t-info small { color: var(--text-secondary); font-size: 12px; }
+        .t-amount { text-align: right; }
+        .status-badge { background: rgba(16, 185, 129, 0.2); color: var(--success); font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+
+        /* SHOP TAB */
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .product-card { background: var(--card-bg); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .product-card h4 { margin: 10px 0 5px 0; }
+        .price { color: var(--accent-blue); font-weight: bold; }
+
+        /* NAV BAR */
+        .nav-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(28, 30, 39, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item { text-align: center; color: var(--text-secondary); font-size: 10px; flex: 1; transition: 0.3s; }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto; }
+        .nav-item.active { color: var(--accent-blue); }
+
+        .tab-content { display: none; }
+        .active-tab { display: block; animation: slideUp 0.4s ease; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="main" class="tab-content active">
-    <div class="header"><h2>Главная</h2></div>
-    <div class="card balance-card">
-        <p style="margin:0; opacity: 0.8;">Доступные бонусы</p>
-        <h1 id="user-balance">1,500 💎</h1>
-        <small id="user-name">Загрузка...</small>
-    </div>
-    <div class="card">
-        <h3>Твой статус: <span style="color:var(--accent)">VIP</span></h3>
-        <p>До следующего уровня 500 баллов</p>
-    </div>
-</div>
-
-<div id="shop" class="tab-content">
-    <div class="header"><h2>Магазин</h2></div>
-    <div class="card">
-        <div class="shop-item">
-            <span>Стикерпак "Неон"</span>
-            <button class="buy-btn" onclick="buy('stickers')">50 💎</button>
+<div class="container">
+    <div id="tab-home" class="tab-content active-tab">
+        <div class="header">
+            <div class="user-info">
+                <div class="avatar"></div>
+                <b id="user-name">User</b>
+            </div>
+            <div style="color: var(--text-secondary)">● ● ●</div>
         </div>
-        <div class="shop-item">
-            <span>Скидка 10% в боте</span>
-            <button class="buy-btn" onclick="buy('discount_10')">200 💎</button>
+
+        <div class="balance-card">
+            <span>Баланс активов</span>
+            <h1 id="main-balance">235 ₽</h1>
+            <div class="stats-grid">
+                <div class="stat-item"><small>Прибыль 24ч</small><div style="color:var(--success)">+12</div></div>
+                <div class="stat-item"><small>Партнеры</small><div>0</div></div>
+                <div class="stat-item"><small>Выведено</small><div>0</div></div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="alert('Пополнение пока недоступно')">↗ Пополнить баланс</button>
+        <button class="btn-secondary">💬 Перейти на форум</button>
+
+        <div class="section-title">История операций</div>
+        <div class="transaction">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="t-icon">↗</div>
+                <div class="t-info"><div>Пополнение</div><small>Сегодня, 02:31</small></div>
+            </div>
+            <div class="t-amount">
+                <div style="color:var(--success)">+100 ₽</div>
+                <span class="status-badge">● Успешно</span>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="profile" class="tab-content">
-    <div class="header"><h2>Профиль</h2></div>
-    <div class="card" style="text-align: center;">
-        <div id="pfp" style="width:80px; height:80px; background:var(--accent); border-radius:50%; margin: 0 auto 15px;"></div>
-        <h3 id="p-name">Username</h3>
-        <p id="p-id" style="color:#888"></p>
+    <div id="tab-shop" class="tab-content">
+        <div class="header"><h2>Магазин</h2></div>
+        <div class="shop-grid">
+            <div class="product-card">
+                <div style="height:100px; background:#252736; border-radius:12px;"></div>
+                <h4>Скидка 5%</h4>
+                <div class="price">50 ₽</div>
+                <button class="btn-primary" style="padding: 8px; margin-top:10px; font-size:12px;" onclick="buy('discount_5')">Купить</button>
+            </div>
+            <div class="product-card">
+                <div style="height:100px; background:#252736; border-radius:12px;"></div>
+                <h4>Премиум</h4>
+                <div class="price">200 ₽</div>
+                <button class="btn-primary" style="padding: 8px; margin-top:10px; font-size:12px;" onclick="buy('premium')">Купить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-profile" class="tab-content">
+        <div class="header"><h2>Профиль</h2></div>
+        <div class="balance-card" style="background: linear-gradient(135deg, #1e293b, #0f172a);">
+            <div class="avatar" style="width:70px; height:70px; margin: 0 auto 15px;"></div>
+            <h2 id="p-name">Username</h2>
+            <p id="p-id" style="color:var(--text-secondary)">ID: 00000000</p>
+        </div>
     </div>
 </div>
 
 <nav class="nav-bar">
-    <div class="nav-item active-nav" onclick="openTab(event, 'main')">Главная</div>
-    <div class="nav-item" onclick="openTab(event, 'shop')">Магазин</div>
-    <div class="nav-item" onclick="openTab(event, 'profile')">Профиль</div>
+    <div class="nav-item active" onclick="switchTab(this, 'tab-home')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Главная
+    </div>
+    <div class="nav-item" onclick="switchTab(this, 'tab-shop')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+        Магазин
+    </div>
+    <div class="nav-item" onclick="switchTab(this, 'tab-profile')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Профиль
+    </div>
 </nav>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    tg.ready();
 
+    // Загрузка данных пользователя
     const user = tg.initDataUnsafe.user;
     if (user) {
         document.getElementById('user-name').innerText = user.first_name;
@@ -82,20 +219,18 @@
         document.getElementById('p-id').innerText = "ID: " + user.id;
     }
 
-    function openTab(evt, tabName) {
-        let content = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < content.length; i++) content[i].classList.remove("active");
-        
-        let navs = document.getElementsByClassName("nav-item");
-        for (let i = 0; i < navs.length; i++) navs[i].classList.remove("active-nav");
-
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active-nav");
+    function switchTab(el, tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active-tab');
+        el.classList.add('active');
+        tg.HapticFeedback.impactOccurred('light');
     }
 
     function buy(item) {
-        // Отправляем данные в бот и закрываем окно
-        tg.sendData("buy:" + item);
+        tg.showConfirm(`Вы уверены, что хотите купить ${item}?`, (ok) => {
+            if (ok) tg.sendData("buy:" + item);
+        });
     }
 </script>
 </body>
