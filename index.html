@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бонусная Карта</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; }
+        .card { 
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 15px; padding: 20px; margin: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .balance { font-size: 2em; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Виртуальная карта</h2>
+        <div id="user_name">Загрузка...</div>
+        <div class="balance">500 БОНУСОВ</div>
+        <p id="user_id"></p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Показываем данные пользователя из Telegram
+        const user = tg.initDataUnsafe.user;
+        if (user) {
+            document.getElementById('user_name').innerText = user.first_name;
+            document.getElementById('user_id').innerText = "ID: " + user.id;
+        }
+    </script>
+</body>
+</html>
