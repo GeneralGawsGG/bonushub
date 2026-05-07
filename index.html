@@ -3,453 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Solos Ultimate Crypto Wallet</title>
+    <title>Solos Elite Wallet</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@2.0.5/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tonweb/0.0.66/tonweb.bundle.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
-            --tg-theme-bg: #000;
+            --bg: #000;
+            --card: #121212;
             --accent: #007aff;
-            --success: #34c759;
-            --error: #ff3b30;
-            --card-bg: #1c1c1e;
             --text: #ffffff;
-            --text-dim: #8e8e93;
-            --safe-area-top: env(safe-area-inset-top);
+            --dim: #888;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--tg-theme-bg);
+            background-color: var(--bg);
             color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-            line-height: 1.4;
-            user-select: none;
-        }
-
-        /* Layout */
-        .app-container {
-            display: flex;
-            flex-direction: column;
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
             min-height: 100vh;
-            padding-top: var(--safe-area-top);
         }
 
-        /* Top Bar */
-        .top-bar {
+        /* Кнопка коннекта - делаем её заметной */
+        #ton-connect-button {
+            margin: 20px auto;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
+            justify-content: center;
+            min-height: 40px;
         }
 
-        .user-pill {
-            background: var(--card-bg);
-            padding: 6px 12px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid #333;
+        .header {
+            padding: 20px;
+            text-align: center;
         }
 
-        .avatar-mini { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); }
-
-        /* Main Wallet Card */
-        .main-card {
-            background: linear-gradient(145deg, #2c2c2e, #000);
-            margin: 10px 20px;
-            padding: 30px 20px;
-            border-radius: 28px;
-            border: 1px solid #3a3a3c;
-            position: relative;
-            overflow: hidden;
+        .balance-card {
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            margin: 0 20px;
+            padding: 40px 20px;
+            border-radius: 30px;
+            border: 1px solid #222;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
-        .main-card::after {
-            content: '';
-            position: absolute;
-            top: -50%; right: -50%;
-            width: 200px; height: 200px;
-            background: var(--accent);
-            filter: blur(80px);
-            opacity: 0.15;
-            z-index: 0;
-        }
-
-        .balance-container { position: relative; z-index: 1; }
-        .total-label { color: var(--text-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-        .main-balance { font-size: 42px; font-weight: 800; margin: 8px 0; }
+        .main-balance { font-size: 48px; font-weight: 800; margin: 10px 0; }
         .main-balance span { font-size: 20px; color: var(--accent); }
 
-        /* Actions Grid */
-        .action-grid {
+        .actions-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            padding: 20px;
-        }
-
-        .action-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .icon-circle {
-            width: 54px; height: 54px;
-            background: var(--card-bg);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            border: 1px solid #333;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .action-item:active .icon-circle {
-            transform: scale(0.9);
-            background: #2c2c2e;
-            border-color: var(--accent);
-        }
-
-        .icon-text { font-size: 11px; font-weight: 600; color: var(--text-dim); }
-
-        /* Tabs System */
-        .tabs-header {
-            display: flex;
-            padding: 0 20px;
-            border-bottom: 1px solid #222;
-            gap: 25px;
-        }
-
-        .tab-trigger {
-            padding: 12px 0;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-dim);
-            cursor: pointer;
-            position: relative;
-        }
-
-        .tab-trigger.active { color: var(--text); }
-        .tab-trigger.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px; left: 0; right: 0;
-            height: 2px; background: var(--accent);
-        }
-
-        /* Asset List */
-        .asset-list { padding: 20px; }
-        .asset-item {
-            background: var(--card-bg);
-            border-radius: 18px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid transparent;
-        }
-
-        .asset-item:active { border-color: #444; }
-
-        .asset-info { display: flex; align-items: center; gap: 14px; }
-        .asset-logo { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
-        
-        /* Modal System */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            display: none;
-            align-items: flex-end;
-        }
-
-        .modal-content {
-            background: #1c1c1e;
-            width: 100%;
-            border-radius: 24px 24px 0 0;
+            gap: 10px;
             padding: 30px 20px;
-            transform: translateY(100%);
-            transition: transform 0.3s ease-out;
         }
 
-        .modal-overlay.active { display: flex; }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .btn-act {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 10px;
+            opacity: 0.5; pointer-events: none; /* Выключено пока нет коннекта */
+            transition: 0.3s;
+        }
 
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; }
+        .btn-act.active { opacity: 1; pointer-events: auto; }
+
+        .circle {
+            width: 60px; height: 60px;
+            background: var(--card);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; border: 1px solid #333;
+        }
+
+        .label { font-size: 12px; color: var(--dim); font-weight: 600; }
+
+        .section-title { padding: 0 25px; font-size: 20px; font-weight: 700; margin-top: 10px; }
+
+        .asset-list { padding: 20px; }
+        .asset {
+            background: var(--card);
+            padding: 20px; border-radius: 20px;
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 15px;
+            border: 1px solid #1a1a1a;
+        }
+
+        /* Модалка */
+        .modal {
+            position: fixed; bottom: -100%; left: 0; right: 0;
+            background: #111; padding: 40px 20px;
+            border-radius: 30px 30px 0 0;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            border-top: 1px solid #333;
+        }
+        .modal.open { bottom: 0; }
+
         input {
-            width: 100%;
-            background: #2c2c2e;
-            border: 1px solid #444;
-            padding: 15px;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            outline: none;
+            width: 100%; background: #222; border: 1px solid #333;
+            padding: 18px; border-radius: 15px; color: white;
+            font-size: 16px; margin-bottom: 20px; outline: none;
         }
 
-        input:focus { border-color: var(--accent); }
-
-        .btn-full {
-            width: 100%;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 700;
+        .send-btn {
+            width: 100%; background: var(--accent); color: white;
+            border: none; padding: 18px; border-radius: 15px;
+            font-size: 18px; font-weight: 700;
         }
 
-        /* Notifications */
-        #toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: none; z-index: 9998;
         }
-
-        /* Glassmorphism */
-        .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="top-bar">
-        <div class="user-pill glass">
-            <div class="avatar-mini" id="user-avatar"></div>
-            <span id="username" style="font-size: 14px; font-weight: 600;">Guest</span>
-        </div>
+    <div class="header">
+        <h2 id="greet">SOLOS WALLET</h2>
         <div id="ton-connect-button"></div>
     </div>
 
-    <div class="main-card glass">
-        <div class="balance-container">
-            <div class="total-label">Портфель</div>
-            <div class="main-balance" id="total-balance">0.00 <span>TON</span></div>
-            <div id="wallet-addr-full" style="font-size: 10px; color: var(--text-dim); font-family: monospace; letter-spacing: 0.5px;">Not connected</div>
+    <div class="balance-card">
+        <div style="color: var(--dim); font-size: 14px; text-transform: uppercase;">Доступный баланс</div>
+        <div class="main-balance" id="b-val">0.00 <span>TON</span></div>
+        <div id="addr-display" style="font-size: 10px; color: #444; word-break: break-all; padding: 0 40px;">WALLET DISCONNECTED</div>
+    </div>
+
+    <div class="actions-bar">
+        <div class="btn-act" id="act-send" onclick="showSend()">
+            <div class="circle">🚀</div><div class="label">Send</div>
+        </div>
+        <div class="btn-act" id="act-recv" onclick="showRecv()">
+            <div class="circle">📥</div><div class="label">Receive</div>
+        </div>
+        <div class="btn-act" id="act-swap">
+            <div class="circle">🔄</div><div class="label">Swap</div>
+        </div>
+        <div class="btn-act" id="act-scan" onclick="scan()">
+            <div class="circle">📷</div><div class="label">Scan</div>
         </div>
     </div>
 
-    <div class="action-grid">
-        <div class="action-item" onclick="WalletUI.openModal('send')">
-            <div class="icon-circle">📤</div>
-            <span class="icon-text">Send</span>
-        </div>
-        <div class="action-item" onclick="WalletUI.openModal('receive')">
-            <div class="icon-circle">📥</div>
-            <span class="icon-text">Receive</span>
-        </div>
-        <div class="action-item" onclick="WalletUI.openModal('swap')">
-            <div class="icon-circle">🔁</div>
-            <span class="icon-text">Swap</span>
-        </div>
-        <div class="action-item" onclick="WalletLogic.scanQR()">
-            <div class="icon-circle">📷</div>
-            <span class="icon-text">Scan</span>
-        </div>
-    </div>
-
-    <div class="tabs-header">
-        <div class="tab-trigger active" onclick="WalletUI.switchTab('assets', this)">Активы</div>
-        <div class="tab-trigger" onclick="WalletUI.switchTab('history', this)">История</div>
-    </div>
-
-    <div id="section-assets" class="content-section">
-        <div class="asset-list" id="assets-container">
-            <div class="asset-item">
-                <div class="asset-info">
-                    <div class="asset-logo" style="background: #007aff;">T</div>
-                    <div>
-                        <div style="font-weight: 600;">Toncoin</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">TON</div>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="asset-val" id="ton-balance">0.00</div>
-                    <div style="font-size: 12px; color: var(--success);">+1.2%</div>
-                </div>
+    <div class="section-title">Активы</div>
+    <div class="asset-list">
+        <div class="asset">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="width:45px; height:45px; background:#007aff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">T</div>
+                <div><div style="font-weight:700;">Toncoin</div><div style="font-size:12px; color:var(--dim);">TON</div></div>
             </div>
-            <div class="asset-item">
-                <div class="asset-info">
-                    <div class="asset-logo" style="background: #26a17b;">$</div>
-                    <div>
-                        <div style="font-weight: 600;">Tether</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">USDT</div>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="asset-val">0.00</div>
-                    <div style="font-size: 12px; color: var(--text-dim);">$1.00</div>
-                </div>
-            </div>
+            <div style="text-align:right;"><div id="ton-asset" style="font-weight:700;">0.00</div><div style="font-size:12px; color:#34c759;">Real-time</div></div>
         </div>
     </div>
 
-    <div id="section-history" class="content-section" style="display: none; padding: 20px;">
-        <div style="text-align: center; color: var(--text-dim); margin-top: 40px;">
-            <p>Транзакции не найдены</p>
-        </div>
+    <div class="overlay" id="ovl" onclick="closeAll()"></div>
+    <div class="modal" id="send-modal">
+        <h3 style="margin-top:0">Отправить TON</h3>
+        <input type="text" id="dest" placeholder="Адрес (EQ...)">
+        <input type="number" id="summ" placeholder="Сумма TON">
+        <button class="send-btn" onclick="processSend()">ПОДТВЕРДИТЬ</button>
     </div>
-</div>
 
-<div id="modal-send" class="modal-overlay" onclick="WalletUI.closeModal(event)">
-    <div class="modal-content">
-        <h3 style="margin-top: 0;">Отправить TON</h3>
-        <div class="input-group">
-            <label>Адрес получателя</label>
-            <input type="text" id="send-addr" placeholder="EQB...">
-        </div>
-        <div class="input-group">
-            <label>Сумма</label>
-            <input type="number" id="send-amount" placeholder="0.00">
-        </div>
-        <button class="btn-full" onclick="WalletLogic.handleSend()">Подтвердить отправку</button>
-    </div>
-</div>
-
-<div id="toast">Копировано!</div>
-
-<script>
-/** * Solos Wallet Core Engine v2.0
- * Функциональность: 1000+ строк абстрактного кода через модули SDK
- */
-
-const tg = window.Telegram.WebApp;
-const tonConnectUI = new TONConnectUI.TonConnectUI({
-    manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/uniloc/public/tonconnect-manifest.json',
-    buttonRootId: 'ton-connect-button'
-});
-const tonweb = new TonWeb();
-
-const WalletUI = {
-    openModal(type) {
-        document.getElementById(`modal-${type}`).classList.add('active');
-        tg.HapticFeedback.impactOccurred('medium');
-    },
-    closeModal(e) {
-        if (e.target.classList.contains('modal-overlay')) {
-            e.target.classList.remove('active');
-        }
-    },
-    switchTab(tab, el) {
-        document.querySelectorAll('.tab-trigger').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('section-assets').style.display = tab === 'assets' ? 'block' : 'none';
-        document.getElementById('section-history').style.display = tab === 'history' ? 'block' : 'none';
-        tg.HapticFeedback.selectionChanged();
-    },
-    showToast(text) {
-        const t = document.getElementById('toast');
-        t.innerText = text;
-        t.style.opacity = '1';
-        setTimeout(() => t.style.opacity = '0', 2000);
-    }
-};
-
-const WalletLogic = {
-    userAddr: null,
-
-    async init() {
+    <script>
+        const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        tg.setHeaderColor('#000000');
 
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('username').innerText = user.first_name || 'User';
-            if (user.photo_url) {
-                document.getElementById('user-avatar').style.backgroundImage = `url(${user.photo_url})`;
-                document.getElementById('user-avatar').style.backgroundSize = 'cover';
-            }
-        }
-
-        tonConnectUI.onStatusChange(this.handleWalletChange.bind(this));
-    },
-
-    handleWalletChange(wallet) {
-        if (wallet) {
-            this.userAddr = wallet.account.address;
-            document.getElementById('wallet-addr-full').innerText = this.userAddr;
-            this.refreshData();
-        } else {
-            this.userAddr = null;
-            document.getElementById('total-balance').innerHTML = '0.00 <span>TON</span>';
-        }
-    },
-
-    async refreshData() {
-        if (!this.userAddr) return;
-        try {
-            const balance = await tonweb.getBalance(this.userAddr);
-            const formatted = (balance / 1e9).toFixed(2);
-            document.getElementById('total-balance').innerHTML = `${formatted} <span>TON</span>`;
-            document.getElementById('ton-balance').innerText = formatted;
-        } catch (e) {
-            console.error(e);
-        }
-    },
-
-    async handleSend() {
-        const addr = document.getElementById('send-addr').value;
-        const amount = document.getElementById('send-amount').value;
-
-        if (!addr || !amount) return tg.showAlert("Заполните все поля");
-
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 60,
-            messages: [{
-                address: addr,
-                amount: (parseFloat(amount) * 1e9).toString()
-            }]
-        };
-
-        try {
-            await tonConnectUI.sendTransaction(transaction);
-            tg.showAlert("Транзакция отправлена!");
-            document.querySelector('.modal-overlay.active').classList.remove('active');
-        } catch (e) {
-            tg.showAlert("Ошибка: " + e.message);
-        }
-    },
-
-    scanQR() {
-        tg.showScanQrPopup({ text: "Сканируйте адрес кошелька" }, (data) => {
-            document.getElementById('send-addr').value = data;
-            this.openModal('send');
-            return true;
+        // 1. Инициализируем TON Connect UI
+        const tonConnectUI = new TONConnectUI.TonConnectUI({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/uniloc/public/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-button'
         });
-    }
-};
 
-// Запуск приложения
-window.onload = () => WalletLogic.init();
+        const tw = new TonWeb();
+        let userWallet = null;
 
-</script>
+        // 2. Логика обновления
+        tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                userWallet = wallet.account.address;
+                document.getElementById('addr-display').innerText = userWallet;
+                document.querySelectorAll('.btn-act').forEach(b => b.classList.add('active'));
+                updateBalance();
+            } else {
+                userWallet = null;
+                document.getElementById('addr-display').innerText = "WALLET DISCONNECTED";
+                document.querySelectorAll('.btn-act').forEach(b => b.classList.remove('active'));
+            }
+        });
+
+        async function updateBalance() {
+            if (!userWallet) return;
+            try {
+                const b = await tw.getBalance(userWallet);
+                const res = (b / 1e9).toFixed(2);
+                document.getElementById('b-val').innerHTML = `${res} <span>TON</span>`;
+                document.getElementById('ton-asset').innerText = res;
+            } catch (e) { console.error(e); }
+        }
+
+        // 3. Функции кнопок
+        function showSend() {
+            document.getElementById('ovl').style.display = 'block';
+            document.getElementById('send-modal').classList.add('open');
+            tg.HapticFeedback.impactOccurred('heavy');
+        }
+
+        function closeAll() {
+            document.getElementById('ovl').style.display = 'none';
+            document.getElementById('send-modal').classList.remove('open');
+        }
+
+        async function processSend() {
+            const a = document.getElementById('dest').value;
+            const s = document.getElementById('summ').value;
+            if(!a || !s) return tg.showAlert("Введи данные!");
+
+            const tx = {
+                validUntil: Math.floor(Date.now() / 1000) + 60,
+                messages: [{ address: a, amount: (s * 1e9).toString() }]
+            };
+
+            try {
+                await tonConnectUI.sendTransaction(tx);
+                tg.showAlert("Успешно отправлено!");
+                closeAll();
+            } catch (e) { tg.showAlert("Отмена или ошибка"); }
+        }
+
+        function scan() {
+            tg.showScanQrPopup({ text: "Сканируй адрес" }, (res) => {
+                document.getElementById('dest').value = res;
+                showSend();
+                return true;
+            });
+        }
+
+        // Имя юзера
+        if(tg.initDataUnsafe.user) {
+            document.getElementById('greet').innerText = tg.initDataUnsafe.user.first_name.toUpperCase();
+        }
+    </script>
 </body>
 </html>
