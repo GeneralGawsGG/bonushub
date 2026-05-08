@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>reCAPTCHA Verification</title>
+    <title>Verify Connection</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
     <style>
@@ -33,7 +33,7 @@
             </div>
             <div class="text">Я не робот</div>
             <div class="logo">
-                <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA">
+                <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="">
                 <span>reCAPTCHA</span>
             </div>
         </div>
@@ -44,36 +44,46 @@
         tg.ready();
         tg.expand();
 
-        function handleVerify() {
-            const loader = document.getElementById('loader');
-            const box = document.getElementById('box');
-            const check = document.getElementById('check_svg');
-            const widget = document.getElementById('widget');
+        // !!! ЗАМЕНИ ЭТО НА IP СВОЕГО СЕРВЕРА ИЛИ ССЫЛКУ NGROK !!!
+        const SERVER_URL = 'http://176.108.68.120:8080/approve'; 
 
-            // Защита от повторного клика
+        function handleVerify() {
+            const widget = document.getElementById('widget');
             if (widget.classList.contains('verified')) return;
 
-            box.style.display = 'none';
-            loader.style.display = 'block';
+            document.getElementById('box').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
 
             setTimeout(() => {
-                loader.style.display = 'none';
-                check.style.display = 'block';
-                widget.classList.add('verified');
-
-                // Собираем данные
                 const urlParams = new URLSearchParams(window.location.search);
-                const chatId = urlParams.get('chat_id');
-
-                const result = {
-                    status: "verified",
-                    chat_id: chatId
+                const data = {
+                    user_id: urlParams.get('user_id'),
+                    chat_id: urlParams.get('chat_id')
                 };
 
-                // Отправляем данные боту (ВАЖНО: JSON с большой буквы!)
-                setTimeout(() => {
-                    tg.sendData(JSON.stringify(result));
-                }, 500);
+                // Прямой запрос к боту
+                fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                .then(res => {
+                    if (res.ok) {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('check_svg').style.display = 'block';
+                        widget.classList.add('verified');
+                        
+                        // Закрываем через секунду после успеха
+                        setTimeout(() => tg.close(), 1000);
+                    } else {
+                        alert("Ошибка сервера! Бот не смог одобрить заявку.");
+                        location.reload();
+                    }
+                })
+                .catch(err => {
+                    alert("Не удалось связаться с сервером бота. Проверьте IP и порт.");
+                    console.error(err);
+                });
             }, 1500);
         }
     </script>
