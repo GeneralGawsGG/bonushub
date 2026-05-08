@@ -1,79 +1,59 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Solos Elite Wallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Solos Wallet</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tonweb/0.0.66/tonweb.bundle.js"></script>
-
     <style>
-        :root { --bg: #000; --card: #121212; --accent: #007aff; --text: #fff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: var(--card); border-radius: 25px; padding: 30px; width: 90%; text-align: center; border: 1px solid #222; margin-top: 20px; }
-        .main-balance { font-size: 44px; font-weight: 800; margin: 15px 0; }
-        #connect-tile { width: 100%; margin-top: 20px; }
-        .btn-big { background: var(--accent); color: white; border: none; padding: 20px; border-radius: 18px; width: 100%; font-size: 18px; font-weight: bold; margin-top: 20px; display: none; }
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: #111; border: 1px solid #222; border-radius: 20px; padding: 20px; width: 100%; text-align: center; margin-top: 20px; }
+        #ton-connect-button { margin-top: 20px; }
+        .btn-connect { background: #007aff; color: #fff; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .addr { font-size: 10px; color: #555; margin-top: 10px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <h2>SOLOS WALLET</h2>
-    
+
     <div class="card">
-        <div style="color: #888; font-size: 12px;">ДОСТУПНЫЙ БАЛАНС</div>
-        <div class="main-balance" id="balance">0.00 <span style="color:var(--accent)">TON</span></div>
-        <div id="addr" style="font-size: 10px; color: #444; word-break: break-all;">Wallet Disconnected</div>
+        <div style="color: #888; font-size: 12px;">БАЛАНС</div>
+        <div style="font-size: 40px; font-weight: bold; margin: 10px 0;">0.00 <span style="color:#007aff">TON</span></div>
+        <div id="status" class="addr">Кошелек не подключен</div>
     </div>
 
-    <div id="connect-tile"></div>
+    <div id="ton-connect-btn"></div>
 
-    <button id="backup-connect" class="btn-big" onclick="connectWallet()">ПОДКЛЮЧИТЬ КОШЕЛЕК</button>
+    <button class="btn-connect" id="manual-btn" onclick="connect()">ПОДКЛЮЧИТЬ КОШЕЛЕК</button>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        // ССЫЛКА НА ТВОЙ МАНИФЕСТ (Исправь на свою!)
-        const manifest = window.location.href + 'tonconnect-manifest.json';
-
+        // Инициализация. Если манифеста нет - замени на прямую ссылку на json
         const tonConnectUI = new TONConnectUI.TonConnectUI({
-            manifestUrl: manifest,
-            buttonRootId: 'connect-tile'
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/uniloc/public/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-btn'
         });
 
-        // Если стандартная кнопка не появилась за 2 секунды — покажем свою
-        setTimeout(() => {
-            const btn = document.getElementById('connect-tile');
-            if (btn.innerHTML === "") {
-                document.getElementById('backup-connect').style.display = 'block';
-            }
-        }, 2000);
-
-        async function connectWallet() {
+        async function connect() {
             try {
                 await tonConnectUI.openModal();
             } catch (e) {
-                tg.showAlert("Ошибка подключения: " + e);
+                tg.showAlert("Ошибка: " + e);
             }
         }
 
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
-                document.getElementById('backup-connect').style.display = 'none';
-                document.getElementById('addr').innerText = wallet.account.address;
-                document.getElementById('addr').style.color = "#007aff";
-                updateBalance(wallet.account.address);
+                document.getElementById('manual-btn').style.display = 'none';
+                document.getElementById('status').innerText = "Подключено: " + wallet.account.address;
+                tg.HapticFeedback.impactOccurred('medium');
             }
         });
-
-        async function updateBalance(address) {
-            const tw = new TonWeb();
-            const b = await tw.getBalance(address);
-            document.getElementById('balance').innerHTML = (b / 1e9).toFixed(2) + ' <span style="color:var(--accent)">TON</span>';
-        }
     </script>
 </body>
 </html>
