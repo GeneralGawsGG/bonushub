@@ -8,14 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
     <style>
         :root { --blue: #4a90e2; }
-        body, html { height: 100%; margin: 0; display: flex; justify-content: center; align-items: center; background-color: #f5f5f5; font-family: 'Roboto', sans-serif; }
+        body, html { height: 100%; margin: 0; display: flex; justify-content: center; align-items: center; background-color: #f5f5f5; font-family: 'Roboto', sans-serif; overflow: hidden; }
         .card { background: #fff; padding: 15px; border-radius: 3px; border: 1px solid #d3d3d3; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .widget { display: flex; align-items: center; width: 302px; height: 76px; background-color: #f9f9f9; border: 1px solid #d3d3d3; border-radius: 3px; }
         .wrapper { margin: 0 12px; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; position: relative; }
         .checkbox { width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px; background: #fff; cursor: pointer; }
         .loader { width: 24px; height: 24px; border: 3px solid var(--blue); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; position: absolute; }
         .check { width: 34px; fill: #009688; display: none; position: absolute; z-index: 2; }
-        .text { color: #000; font-size: 14px; flex-grow: 1; }
+        .text { color: #000; font-size: 14px; flex-grow: 1; user-select: none; }
         .logo { display: flex; flex-direction: column; align-items: center; padding-right: 10px; font-size: 8px; color: #555; }
         .logo img { width: 32px; height: 32px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -33,7 +33,7 @@
             </div>
             <div class="text">Я не робот</div>
             <div class="logo">
-                <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="">
+                <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA">
                 <span>reCAPTCHA</span>
             </div>
         </div>
@@ -50,6 +50,9 @@
             const check = document.getElementById('check_svg');
             const widget = document.getElementById('widget');
 
+            // Защита от повторного клика
+            if (widget.classList.contains('verified')) return;
+
             box.style.display = 'none';
             loader.style.display = 'block';
 
@@ -58,20 +61,19 @@
                 check.style.display = 'block';
                 widget.classList.add('verified');
 
-                // Получаем chat_id из URL
+                // Собираем данные
                 const urlParams = new URLSearchParams(window.location.search);
                 const chatId = urlParams.get('chat_id');
 
-                const data = {
+                const result = {
                     status: "verified",
                     chat_id: chatId
                 };
 
-                // Отправка боту
+                // Отправляем данные боту (ВАЖНО: JSON с большой буквы!)
                 setTimeout(() => {
-                    tg.sendData(JSON.stringify(data));
-                    tg.close();
-                }, 800);
+                    tg.sendData(JSON.stringify(result));
+                }, 500);
             }, 1500);
         }
     </script>
