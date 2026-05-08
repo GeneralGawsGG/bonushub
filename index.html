@@ -7,72 +7,73 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
     <style>
-        :root { --recaptcha-blue: #4a90e2; }
-        body, html { 
-            height: 100%; margin: 0; display: flex; justify-content: center; 
-            align-items: center; background-color: transparent; /* Для прозрачности в ТГ */
-            font-family: 'Roboto', sans-serif;
-        }
-        .captcha-card { background: #fff; padding: 15px; border-radius: 3px; border: 1px solid #d3d3d3; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .captcha-widget { display: flex; align-items: center; width: 302px; height: 76px; background-color: #f9f9f9; border: 1px solid #d3d3d3; border-radius: 3px; }
-        .checkbox-wrapper { margin: 0 12px; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; position: relative; }
-        .checkbox-input { width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px; background: #fff; cursor: pointer; }
-        .loader { width: 24px; height: 24px; border: 3px solid var(--recaptcha-blue); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; position: absolute; }
-        .checkmark { width: 34px; fill: #009688; display: none; position: absolute; z-index: 2; }
-        .label-text { color: #000; font-size: 14px; flex-grow: 1; }
-        .logo-area { display: flex; flex-direction: column; align-items: center; padding-right: 10px; font-size: 8px; color: #555; }
-        .logo-area img { width: 32px; height: 32px; }
+        :root { --blue: #4a90e2; }
+        body, html { height: 100%; margin: 0; display: flex; justify-content: center; align-items: center; background-color: #f5f5f5; font-family: 'Roboto', sans-serif; }
+        .card { background: #fff; padding: 15px; border-radius: 3px; border: 1px solid #d3d3d3; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .widget { display: flex; align-items: center; width: 302px; height: 76px; background-color: #f9f9f9; border: 1px solid #d3d3d3; border-radius: 3px; }
+        .wrapper { margin: 0 12px; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; position: relative; }
+        .checkbox { width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px; background: #fff; cursor: pointer; }
+        .loader { width: 24px; height: 24px; border: 3px solid var(--blue); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; position: absolute; }
+        .check { width: 34px; fill: #009688; display: none; position: absolute; z-index: 2; }
+        .text { color: #000; font-size: 14px; flex-grow: 1; }
+        .logo { display: flex; flex-direction: column; align-items: center; padding-right: 10px; font-size: 8px; color: #555; }
+        .logo img { width: 32px; height: 32px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .verified .checkbox-input { display: none; }
-        .verified .checkmark { display: block; }
+        .verified .checkbox { display: none; }
+        .verified .check { display: block; }
     </style>
 </head>
 <body>
-
-<div class="captcha-card">
-    <div class="captcha-widget" id="widget">
-        <div class="checkbox-wrapper" onclick="handleVerify()">
-            <div class="checkbox-input" id="box"></div>
-            <div class="loader" id="loader"></div>
-            <svg class="checkmark" id="check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-        </div>
-        <div class="label-text">Я не робот</div>
-        <div class="logo-area">
-            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="">
-            <span>reCAPTCHA</span>
+    <div class="card">
+        <div class="widget" id="widget">
+            <div class="wrapper" onclick="handleVerify()">
+                <div class="checkbox" id="box"></div>
+                <div class="loader" id="loader"></div>
+                <svg class="check" id="check_svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="text">Я не робот</div>
+            <div class="logo">
+                <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="">
+                <span>reCAPTCHA</span>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
 
-    function handleVerify() {
-        const loader = document.getElementById('loader');
-        const box = document.getElementById('box');
-        const check = document.getElementById('check');
-        const widget = document.getElementById('widget');
+        function handleVerify() {
+            const loader = document.getElementById('loader');
+            const box = document.getElementById('box');
+            const check = document.getElementById('check_svg');
+            const widget = document.getElementById('widget');
 
-        box.style.display = 'none';
-        loader.style.display = 'block';
+            box.style.display = 'none';
+            loader.style.display = 'block';
 
-        // Имитация "умной" проверки
-        setTimeout(() => {
-            loader.style.display = 'none';
-            check.style.display = 'block';
-            widget.classList.add('verified');
-
-            // КЛЮЧЕВОЙ МОМЕНТ: отправляем боту JSON
             setTimeout(() => {
-                tg.sendData(JSON.stringify({
+                loader.style.display = 'none';
+                check.style.display = 'block';
+                widget.classList.add('verified');
+
+                // Получаем chat_id из URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const chatId = urlParams.get('chat_id');
+
+                const data = {
                     status: "verified",
-                    chat_id: new URLSearchParams(window.location.search).get('chat_id')
-                }));
-            }, 500);
-        }, 1500);
-    }
-</script>
+                    chat_id: chatId
+                };
+
+                // Отправка боту
+                setTimeout(() => {
+                    tg.sendData(JSON.stringify(data));
+                    tg.close();
+                }, 800);
+            }, 1500);
+        }
+    </script>
 </body>
 </html>
